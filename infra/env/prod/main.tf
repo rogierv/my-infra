@@ -43,7 +43,7 @@ module "key_vault" {
 # ==============================================================================
 
 resource "azuread_group" "developers" {
-  display_name     = "${var.prefix}-developers-${var.env}"
+  display_name     = "${var.prefix}-aad-developers-${var.env}"
   security_enabled = true
 }
 
