@@ -14,3 +14,12 @@ module "app_insights" {
   resource_group_name     = module.resource_group.name
   resource_group_location = module.resource_group.location
 }
+
+module "app_config" {
+  source = "../../modules/app_config"
+
+  prefix                  = var.prefix
+  env                     = var.env
+  resource_group_name     = module.resource_group.name
+  resource_group_location = module.resource_group.location
+}
