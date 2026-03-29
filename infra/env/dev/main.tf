@@ -23,3 +23,12 @@ module "app_config" {
   resource_group_name     = module.resource_group.name
   resource_group_location = module.resource_group.location
 }
+
+module "key_vault" {
+  source = "../../modules/key_vault"
+
+  prefix                  = var.prefix
+  env                     = var.env
+  resource_group_name     = module.resource_group.name
+  resource_group_location = module.resource_group.location
+}
