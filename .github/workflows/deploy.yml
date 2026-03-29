@@ -1,4 +1,4 @@
-name: Deploy
+name: Terraform Deploy
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
 
 permissions:
-  id-token: write   # required for OIDC login
+  id-token: write
   contents: read
 
 env:
@@ -16,15 +16,19 @@ env:
   ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
 jobs:
-  plan-dev:
-    name: Plan (dev)
+
+  plan:
+    name: Plan (${{ matrix.env }})
     runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    strategy:
+      matrix:
+        env: [dev, prod]
 
-      - name: Azure login (OIDC)
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure login
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -37,46 +41,52 @@ jobs:
           tofu_version: "~1"
 
       - name: Init
-        working-directory: infra/env/dev
+        working-directory: infra/env/${{ matrix.env }}
         run: tofu init
 
       - name: Format check
-        working-directory: infra/env/dev
+        working-directory: infra/env/${{ matrix.env }}
         run: tofu fmt -check -recursive
 
       - name: Validate
-        working-directory: infra/env/dev
+        working-directory: infra/env/${{ matrix.env }}
         run: tofu validate
 
       - name: Plan
-        working-directory: infra/env/dev
+        working-directory: infra/env/${{ matrix.env }}
         run: tofu plan -out=tfplan
 
-      - name: Write plan to summary
-        working-directory: infra/env/dev
+      - name: Write plan summary
+        working-directory: infra/env/${{ matrix.env }}
         run: |
+          echo "### Terraform Plan (${{ matrix.env }})" >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           tofu show -no-color tfplan >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
 
-      - name: Upload plan artifact
+      - name: Upload plan
         uses: actions/upload-artifact@v4
         with:
-          name: tfplan-dev
-          path: infra/env/dev/tfplan
+          name: tfplan-${{ matrix.env }}
+          path: infra/env/${{ matrix.env }}/tfplan
           retention-days: 1
 
-  apply-dev:
-    name: Apply (dev)
+
+  apply:
+    name: Apply (${{ matrix.env }})
     runs-on: ubuntu-latest
-    needs: plan-dev
-    environment: dev   # add required reviewers in GitHub Settings → Environments to gate apply
+    needs: plan
+
+    strategy:
+      matrix:
+        env: [dev, prod]
+
+    environment: ${{ matrix.env }}
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Azure login (OIDC)
+      - name: Azure login
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -89,104 +99,15 @@ jobs:
           tofu_version: "~1"
 
       - name: Init
-        working-directory: infra/env/dev
+        working-directory: infra/env/${{ matrix.env }}
         run: tofu init
 
-      - name: Download plan artifact
+      - name: Download plan
         uses: actions/download-artifact@v4
         with:
-          name: tfplan-dev
-          path: infra/env/dev
+          name: tfplan-${{ matrix.env }}
+          path: infra/env/${{ matrix.env }}
 
       - name: Apply
-        working-directory: infra/env/dev
+        working-directory: infra/env/${{ matrix.env }}
         run: tofu apply -auto-approve tfplan
-
-  plan-prod:
-    name: Plan (prod)
-    runs-on: ubuntu-latest
-    needs: apply-dev
-    environment: prod   # approval gate — prod stays pending until a reviewer explicitly approves
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Azure login (OIDC)
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      - name: Install OpenTofu
-        uses: opentofu/setup-opentofu@v1
-        with:
-          tofu_version: "~1"
-
-      - name: Init
-        working-directory: infra/env/prod
-        run: tofu init
-
-      - name: Format check
-        working-directory: infra/env/prod
-        run: tofu fmt -check -recursive
-
-      - name: Validate
-        working-directory: infra/env/prod
-        run: tofu validate
-
-      - name: Plan
-        working-directory: infra/env/prod
-        run: tofu plan -out=tfplan
-
-      - name: Write plan to summary
-        working-directory: infra/env/prod
-        run: |
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          tofu show -no-color tfplan >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-
-      - name: Upload plan artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: tfplan-prod
-          path: infra/env/prod/tfplan
-          retention-days: 1
-
-  apply-prod:
-    name: Apply (prod)
-    runs-on: ubuntu-latest
-    needs: plan-prod
-    environment: prod-apply   # second approval gate — reviewer checks plan summary before apply
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Azure login (OIDC)
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      - name: Install OpenTofu
-        uses: opentofu/setup-opentofu@v1
-        with:
-          tofu_version: "~1"
-
-      - name: Init
-        working-directory: infra/env/prod
-        run: tofu init
-
-      - name: Download plan artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: tfplan-prod
-          path: infra/env/prod
-
-      - name: Apply
-        working-directory: infra/env/prod
-        run: tofu apply -auto-approve tfplan
-
