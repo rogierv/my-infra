@@ -76,6 +76,13 @@ jobs:
     name: Apply (${{ matrix.env }})
     runs-on: ubuntu-latest
     needs: plan
+    on:
+      workflow_dispatch:
+        inputs:
+          env:
+            description: 'Environment to deploy (dev or prod)'
+            required: true
+            default: 'dev'
 
     strategy:
       matrix:
