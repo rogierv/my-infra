@@ -1,14 +1,12 @@
-name: Deploy Prod
+name: Rollback Prod
 
 on:
   workflow_dispatch:
-  workflow_run:
-    workflows:
-      - Deploy Dev
-    types:
-      - completed
-    branches:
-      - main
+    inputs:
+      commit_sha:
+        description: "Commit SHA to roll back to (e.g. a1b2c3d)"
+        required: true
+        type: string
 
 permissions:
   id-token: write   # required for OIDC login
@@ -18,10 +16,9 @@ env:
   TF_WORKING_DIR: infra/env/prod
 
 jobs:
-  deploy-prod:
-    name: Plan & Apply (prod)
+  rollback-prod:
+    name: Rollback (prod)
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     environment: prod   # requires manual approval in GitHub environment settings
     env:
       ARM_USE_OIDC: true
@@ -30,8 +27,10 @@ jobs:
       ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
     steps:
-      - name: Checkout
+      - name: Checkout target commit
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.commit_sha }}
 
       - name: Azure login (OIDC)
         uses: azure/login@v2
@@ -48,14 +47,6 @@ jobs:
       - name: Init
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: tofu init
-
-      - name: Format check
-        working-directory: ${{ env.TF_WORKING_DIR }}
-        run: tofu fmt -check -recursive
-
-      - name: Validate
-        working-directory: ${{ env.TF_WORKING_DIR }}
-        run: tofu validate
 
       - name: Plan
         working-directory: ${{ env.TF_WORKING_DIR }}

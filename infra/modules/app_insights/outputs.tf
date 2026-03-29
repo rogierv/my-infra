@@ -9,3 +9,8 @@ output "connection_string" {
   value       = azurerm_application_insights.this.connection_string
   sensitive   = true
 }
+
+output "workspace_id" {
+  description = "ID of the Log Analytics Workspace backing Application Insights."
+  value       = azurerm_log_analytics_workspace.this.id
+}
