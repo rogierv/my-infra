@@ -1,9 +1,7 @@
-name: Deploy Dev
+name: Deploy Prod
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 permissions:
   id-token: write
@@ -16,8 +14,8 @@ env:
   ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
 jobs:
-  plan-dev:
-    name: Plan (dev)
+  plan-prod:
+    name: Plan (prod)
     runs-on: ubuntu-latest
 
     steps:
@@ -36,25 +34,25 @@ jobs:
           tofu_version: "~1"
 
       - name: Init
-        working-directory: infra/env/dev
+        working-directory: infra/env/prod
         run: tofu init
 
       - name: Format check
-        working-directory: infra/env/dev
+        working-directory: infra/env/prod
         run: tofu fmt -check -recursive
 
       - name: Validate
-        working-directory: infra/env/dev
+        working-directory: infra/env/prod
         run: tofu validate
 
       - name: Plan
-        working-directory: infra/env/dev
+        working-directory: infra/env/prod
         run: tofu plan -out=tfplan
 
       - name: Write plan summary
-        working-directory: infra/env/dev
+        working-directory: infra/env/prod
         run: |
-          echo '### Plan (dev)' >> $GITHUB_STEP_SUMMARY
+          echo '### Plan (prod)' >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
           tofu show -no-color tfplan >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
@@ -62,14 +60,14 @@ jobs:
       - name: Upload plan
         uses: actions/upload-artifact@v4
         with:
-          name: tfplan-dev
-          path: infra/env/dev/tfplan
+          name: tfplan-prod
+          path: infra/env/prod/tfplan
           retention-days: 1
 
-  apply-dev:
-    name: Apply (dev)
+  apply-prod:
+    name: Apply (prod)
     runs-on: ubuntu-latest
-    needs: plan-dev
+    needs: plan-prod
 
     steps:
       - uses: actions/checkout@v4
@@ -87,16 +85,15 @@ jobs:
           tofu_version: "~1"
 
       - name: Init
-        working-directory: infra/env/dev
+        working-directory: infra/env/prod
         run: tofu init
 
       - name: Download plan
         uses: actions/download-artifact@v4
         with:
-          name: tfplan-dev
-          path: infra/env/dev
+          name: tfplan-prod
+          path: infra/env/prod
 
       - name: Apply
-        working-directory: infra/env/dev
+        working-directory: infra/env/prod
         run: tofu apply -auto-approve tfplan
-
