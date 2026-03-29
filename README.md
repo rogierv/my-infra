@@ -14,6 +14,8 @@ az ad sp create-for-rbac --name github-deployer --role Owner --scopes /subscript
 
 Note the `appId`, `tenantId`, and your `subscriptionId` — you'll need them in the next step.
 
+> **Important:** The service principal requires the **User Access Administrator** role on the subscription, in addition to Contributor, because OpenTofu creates role assignments. `Owner` covers both, so use that if creating from scratch.
+
 ### 2. Configure OIDC federation
 
 Allow GitHub Actions to authenticate as the service principal without a client secret.
