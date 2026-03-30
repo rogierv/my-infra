@@ -3,6 +3,11 @@ variable "prefix" {
   type        = string
 }
 
+variable "name" {
+  description = "Name segment for the resource group (e.g. 'infra', 'app')."
+  type        = string
+}
+
 variable "env" {
   description = "Environment name (e.g. dev, prod)."
   type        = string
