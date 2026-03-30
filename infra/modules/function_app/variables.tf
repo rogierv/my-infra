@@ -24,9 +24,9 @@ variable "resource_group_location" {
 }
 
 variable "sku_name" {
-  description = "SKU of the service plan. Use Y1 for consumption, EP1/EP2/EP3 for elastic premium. Ignored when service_plan_id is set."
+  description = "SKU of the service plan. Use FC1 for Flex Consumption, Y1 for consumption, EP1/EP2/EP3 for elastic premium. Ignored when service_plan_id is set."
   type        = string
-  default     = "Y1"
+  default     = "FC1"
 }
 
 variable "service_plan_id" {
