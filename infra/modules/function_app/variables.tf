@@ -67,3 +67,9 @@ variable "runtime_version" {
   description = "Version of the runtime (e.g. '8.0' for dotnet, '3.11' for python, '20' for node, '17' for java, '7.4' for powershell)."
   type        = string
 }
+
+variable "dotnet_isolated" {
+  description = "Whether to use the dotnet isolated worker model. Only applies when runtime_name is 'dotnet'."
+  type        = bool
+  default     = true
+}

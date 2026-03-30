@@ -29,11 +29,12 @@ resource "azurerm_linux_function_app" "this" {
 
   site_config {
     application_stack {
-      dotnet_version          = var.runtime_name == "dotnet" ? var.runtime_version : null
-      python_version          = var.runtime_name == "python" ? var.runtime_version : null
-      node_version            = var.runtime_name == "node" ? var.runtime_version : null
-      java_version            = var.runtime_name == "java" ? var.runtime_version : null
-      powershell_core_version = var.runtime_name == "powershell" ? var.runtime_version : null
+      dotnet_version              = var.runtime_name == "dotnet" ? var.runtime_version : null
+      use_dotnet_isolated_runtime = var.runtime_name == "dotnet" ? var.dotnet_isolated : null
+      python_version              = var.runtime_name == "python" ? var.runtime_version : null
+      node_version                = var.runtime_name == "node" ? var.runtime_version : null
+      java_version                = var.runtime_name == "java" ? var.runtime_version : null
+      powershell_core_version     = var.runtime_name == "powershell" ? var.runtime_version : null
     }
   }
 }
