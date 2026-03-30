@@ -6,6 +6,7 @@ module "resource_group" {
   source = "../../modules/resource_group"
 
   prefix   = var.prefix
+  name     = "infra"
   env      = var.env
   location = var.location
 }
