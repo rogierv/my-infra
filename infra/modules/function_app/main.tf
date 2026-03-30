@@ -9,32 +9,33 @@ resource "azurerm_service_plan" "this" {
   location            = var.resource_group_location
   resource_group_name = var.resource_group_name
   os_type             = "Linux"
-  sku_name            = var.sku_name
+  sku_name            = "FC1"
 }
 
-resource "azurerm_linux_function_app" "this" {
+resource "azurerm_storage_container" "this" {
+  name                  = "${var.prefix}-func-${var.name}-${var.env}"
+  storage_account_id    = var.storage_account_id
+  container_access_type = "private"
+}
+
+resource "azurerm_function_app_flex_consumption" "this" {
   name                = "${var.prefix}-func-${var.name}-${var.env}"
   location            = var.resource_group_location
   resource_group_name = var.resource_group_name
   service_plan_id     = local.service_plan_id
 
-  storage_account_name       = var.storage_account_name
-  storage_account_access_key = var.storage_account_access_key
+  storage_container_type      = "blobContainer"
+  storage_container_endpoint  = "${var.storage_account_primary_blob_endpoint}${azurerm_storage_container.this.name}"
+  storage_authentication_type = "StorageAccountConnectionString"
+  storage_access_key          = var.storage_account_access_key
+
+  runtime_name          = var.runtime_name
+  runtime_version       = var.runtime_version
+  instance_memory_in_mb = var.instance_memory_in_mb
 
   https_only = true
 
-  app_settings = var.app_insights_connection_string != null ? {
-    APPLICATIONINSIGHTS_CONNECTION_STRING = var.app_insights_connection_string
-  } : {}
-
   site_config {
-    application_stack {
-      dotnet_version              = var.runtime_name == "dotnet" ? var.runtime_version : null
-      use_dotnet_isolated_runtime = var.runtime_name == "dotnet" ? var.dotnet_isolated : null
-      python_version              = var.runtime_name == "python" ? var.runtime_version : null
-      node_version                = var.runtime_name == "node" ? var.runtime_version : null
-      java_version                = var.runtime_name == "java" ? var.runtime_version : null
-      powershell_core_version     = var.runtime_name == "powershell" ? var.runtime_version : null
-    }
+    application_insights_connection_string = var.app_insights_connection_string
   }
 }

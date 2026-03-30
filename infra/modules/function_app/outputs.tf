@@ -1,16 +1,16 @@
 output "id" {
   description = "ID of the function app."
-  value       = azurerm_linux_function_app.this.id
+  value       = azurerm_function_app_flex_consumption.this.id
 }
 
 output "name" {
   description = "Name of the function app."
-  value       = azurerm_linux_function_app.this.name
+  value       = azurerm_function_app_flex_consumption.this.name
 }
 
 output "hostname" {
   description = "Default hostname of the function app."
-  value       = azurerm_linux_function_app.this.default_hostname
+  value       = azurerm_function_app_flex_consumption.this.default_hostname
 }
 
 output "service_plan_id" {
