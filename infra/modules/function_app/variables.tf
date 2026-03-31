@@ -77,3 +77,9 @@ variable "instance_memory_in_mb" {
     error_message = "instance_memory_in_mb must be either 512 or 2048."
   }
 }
+
+variable "app_settings" {
+  description = "A map of app settings (environment variables)."
+  type        = map(string)
+  default     = {}
+}
