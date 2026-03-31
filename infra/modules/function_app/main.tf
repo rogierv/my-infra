@@ -37,6 +37,10 @@ resource "azurerm_function_app_flex_consumption" "this" {
 
   app_settings = var.app_settings
 
+  identity {
+    type = "SystemAssigned"
+  }
+
   site_config {
     application_insights_connection_string = var.app_insights_connection_string
   }
