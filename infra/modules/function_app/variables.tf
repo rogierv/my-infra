@@ -83,3 +83,8 @@ variable "app_settings" {
   type        = map(string)
   default     = {}
 }
+
+variable "user_assigned_identity_id" {
+  description = "ID of the user-assigned managed identity to assign to the function app."
+  type        = string
+}
