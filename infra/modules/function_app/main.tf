@@ -35,6 +35,8 @@ resource "azurerm_function_app_flex_consumption" "this" {
 
   https_only = true
 
+  app_settings = var.app_settings
+
   site_config {
     application_insights_connection_string = var.app_insights_connection_string
   }
