@@ -55,14 +55,19 @@ resource "azuread_group_member" "developers" {
   member_object_id = each.value
 }
 
-resource "azurerm_role_assignment" "app_config_data_reader" {
-  scope                = module.app_config.id
-  role_definition_name = "App Configuration Data Reader"
-  principal_id         = azuread_group.developers.object_id
-}
+module "developer_role_assignments" {
+  source = "../../modules/role_assignment"
 
-resource "azurerm_role_assignment" "key_vault_secrets_officer" {
-  scope                = module.key_vault.id
-  role_definition_name = "Key Vault Secrets Officer"
-  principal_id         = azuread_group.developers.object_id
+  role_assignments = {
+    app_config_data_reader = {
+      scope                = module.app_config.id
+      role_definition_name = "App Configuration Data Reader"
+      principal_id         = azuread_group.developers.object_id
+    }
+    key_vault_secrets_officer = {
+      scope                = module.key_vault.id
+      role_definition_name = "Key Vault Secrets Officer"
+      principal_id         = azuread_group.developers.object_id
+    }
+  }
 }
