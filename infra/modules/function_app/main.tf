@@ -38,8 +38,7 @@ resource "azurerm_function_app_flex_consumption" "this" {
   app_settings = var.app_settings
 
   identity {
-    type         = "SystemAssigned, UserAssigned"
-    identity_ids = [var.user_assigned_identity_id]
+    type = "SystemAssigned"
   }
 
   site_config {
